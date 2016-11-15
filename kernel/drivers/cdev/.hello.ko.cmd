@@ -1,1 +1,0 @@
-cmd_/home/jgsun/work/trainning/kernel/cdev/hello.ko := ld -r -m elf_x86_64 -T /usr/src/linux-headers-3.11.0-15-generic/scripts/module-common.lds --build-id  -o /home/jgsun/work/trainning/kernel/cdev/hello.ko /home/jgsun/work/trainning/kernel/cdev/hello.o /home/jgsun/work/trainning/kernel/cdev/hello.mod.o

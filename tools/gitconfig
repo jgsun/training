@@ -1,0 +1,9 @@
+[user]
+	name = jgsun
+	email = jianguo_sun@hotmail.com
+[color]
+	status = auto
+	branch=auto
+	interactive=auto
+	diff=auto
+	log=auto
