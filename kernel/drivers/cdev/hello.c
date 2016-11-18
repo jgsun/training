@@ -4,40 +4,112 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
 
 MODULE_LICENSE ("GPL");
 
-int hello_major = 555;
-int hello_minor = 0;
-int number_of_devices = 1;
-struct cdev hello_cdev;
-dev_t hello_dev = 0;
+#define HELLO_MAX_DEVICES	1
+#define HELLO_ON	1
+#define HELLO_OFF	0
 
-struct file_operations hello_fops = {
-	.owner = THIS_MODULE
+static int hello_major;
+static struct cdev *hello_cdev;
+
+struct hello_device {
+	struct cdev *cdev;
+	unsigned char value;
 };
 
 struct class hello_class = {
-	.name = "hello_class",
+	.name = "hello",
 };
 
-static int __init hello_2_init(void)
+int hello_open(struct inode *inode, struct file *filp)
 {
-	int ret;
+	struct hello_device *dev;
+	dev = container_of(inode->i_cdev, struct hello_device, cdev);
+	filp->private_data = dev;
+	return 0;
+}
 
-	hello_dev = MKDEV(hello_major, hello_minor);
-	ret = register_chrdev_region(hello_dev, number_of_devices, "hello");
-	if (ret < 0) {
-		printk (KERN_WARNING "hello: can't get major number %d/n", hello_major);
-		return ret;
+ssize_t hello_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
+{
+	struct hello_device *dev = filp->private_data;
+	if (copy_to_user(buf, &(dev->value), 1))
+		return -EFAULT;
+	return 1;
+}
+
+ssize_t hello_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos)
+{
+	struct hello_device *dev = filp->private_data;
+	if (copy_from_user(&(dev->value), buf, 1))
+		return -EFAULT;
+	return 1;
+}
+
+long hello_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	struct hello_device *dev = filp->private_data;
+	switch(cmd) {
+	case HELLO_ON:
+	      printk("hello on\n");
+	      dev->value = 1;
+	      break;
+	case HELLO_OFF:
+	      printk("hello off\n");
+	      dev->value = 0;
+	      break;
+	default:
+	      return -ENOTTY;
+	}
+	return 0;
+}
+
+struct file_operations hello_fops = {
+	.owner = THIS_MODULE,
+	.read = hello_read,
+	.write = hello_write,
+	.unlocked_ioctl = hello_ioctl,
+	.open = hello_open,
+};
+
+static int __init hello_init(void)
+{
+	static const char name[] = "hello";
+	struct hello_device *devp = NULL;
+	int ret = 0;
+	dev_t hello_dev;
+
+	devp = kzalloc(sizeof(struct hello_device), GFP_KERNEL);
+	if (!devp) {
+		printk(KERN_WARNING "hello: can't alloc hello_device\n");
+		ret = -ENOMEM;
+		goto out;
 	}
 
-	cdev_init(&hello_cdev, &hello_fops);
-	hello_cdev.owner = THIS_MODULE;
-	hello_cdev.ops = &hello_fops;
-	ret = cdev_add(&hello_cdev, hello_dev, number_of_devices);
-	if (ret)
-		printk(KERN_NOTICE "Error %d adding char_reg_setup_cdev", ret);
+	ret = alloc_chrdev_region(&hello_dev, 0, HELLO_MAX_DEVICES, name);
+	if (ret) {
+		printk(KERN_WARNING "hello: can't alloc_chrdev_region, %d\n", ret);
+		goto out_free;
+	}
+
+	devp->cdev = cdev_alloc();
+	if (!devp->cdev) {
+		printk(KERN_WARNING "hello: can't alloc_cdev, %d\n", ret);
+		ret = -ENOMEM;
+		goto out_unregister;
+	}
+
+	devp->cdev->owner = THIS_MODULE;
+	devp->cdev->ops = &hello_fops;
+	hello_cdev = devp->cdev;
+	ret = cdev_add(devp->cdev, hello_dev, HELLO_MAX_DEVICES);
+	if (ret) {
+		printk(KERN_NOTICE "Error %d adding cdev", ret);
+		goto out_unregister;
+	}
 
 	/* create your own class under /sysfs */
 	ret = class_register(&hello_class);
@@ -46,23 +118,32 @@ static int __init hello_2_init(void)
 		return -1;
 	}
 
+	hello_major = MAJOR(hello_dev);
 	/* register your own device in sysfs, and this will cause udev to create corresponding device node */
 	device_create(&hello_class, NULL, MKDEV(hello_major, 0), NULL, "hello%d", 0);
 
 	printk(KERN_INFO "Registered character driver/n");
+
 	return 0;
+
+out_unregister:
+	unregister_chrdev_region(hello_dev, HELLO_MAX_DEVICES);
+out_free:
+	kfree(devp);
+out:
+	return ret;
 }
 
-static void __exit hello_2_exit (void)
+static void __exit hello_exit (void)
 {
 	class_unregister(&hello_class);                               //delete class created by us
 
 	device_destroy(&hello_class, MKDEV(hello_major, 0));         //delete device node under /dev
-	unregister_chrdev_region(hello_dev, number_of_devices);
-	cdev_del(&hello_cdev);
+	unregister_chrdev_region(MKDEV(hello_major, 0), HELLO_MAX_DEVICES);
+	cdev_del(hello_cdev);
 
 	printk(KERN_INFO "char driver cleaned up/n");
 }
 
-module_init(hello_2_init);
-module_exit(hello_2_exit);
+module_init(hello_init);
+module_exit(hello_exit);
