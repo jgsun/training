@@ -10,15 +10,17 @@
 MODULE_LICENSE ("GPL");
 
 #define HELLO_MAX_DEVICES	1
-#define HELLO_ON	1
-#define HELLO_OFF	0
+#define HELLO_ON		1
+#define HELLO_OFF		0
+#define BUFLEN			20
 
 static int hello_major;
 static struct cdev *hello_cdev;
 
 struct hello_device {
-	struct cdev *cdev;
+	struct cdev cdev;
 	unsigned char value;
+	unsigned char buf[BUFLEN];
 };
 
 struct class hello_class = {
@@ -36,7 +38,10 @@ int hello_open(struct inode *inode, struct file *filp)
 ssize_t hello_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
 	struct hello_device *dev = filp->private_data;
-	if (copy_to_user(buf, &(dev->value), 1))
+	int size = count;
+	int pos = *f_pos;
+	printk("%s,count=%d, position=%d\n", __func__, size, pos);
+	if (copy_to_user(buf, dev->buf, count))
 		return -EFAULT;
 	return 1;
 }
@@ -44,7 +49,10 @@ ssize_t hello_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
 ssize_t hello_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos)
 {
 	struct hello_device *dev = filp->private_data;
-	if (copy_from_user(&(dev->value), buf, 1))
+	int size = count;
+	int pos = *f_pos;
+	printk("%s,count=%d, position=%d\n", __func__, size, pos);
+	if (copy_from_user(dev->buf, buf, count))
 		return -EFAULT;
 	return 1;
 }
@@ -95,17 +103,16 @@ static int __init hello_init(void)
 		goto out_free;
 	}
 
-	devp->cdev = cdev_alloc();
-	if (!devp->cdev) {
-		printk(KERN_WARNING "hello: can't alloc_cdev, %d\n", ret);
-		ret = -ENOMEM;
-		goto out_unregister;
-	}
+	hello_major = MAJOR(hello_dev);
 
-	devp->cdev->owner = THIS_MODULE;
-	devp->cdev->ops = &hello_fops;
-	hello_cdev = devp->cdev;
-	ret = cdev_add(devp->cdev, hello_dev, HELLO_MAX_DEVICES);
+	cdev_init(&devp->cdev, &hello_fops);
+
+	devp->cdev.owner = THIS_MODULE;
+	devp->cdev.ops = &hello_fops;
+	hello_cdev = &devp->cdev;
+
+	strcpy(devp->buf, "hello, kernel init");
+	ret = cdev_add(&devp->cdev, hello_dev, HELLO_MAX_DEVICES);
 	if (ret) {
 		printk(KERN_NOTICE "Error %d adding cdev", ret);
 		goto out_unregister;
@@ -118,7 +125,6 @@ static int __init hello_init(void)
 		return -1;
 	}
 
-	hello_major = MAJOR(hello_dev);
 	/* register your own device in sysfs, and this will cause udev to create corresponding device node */
 	device_create(&hello_class, NULL, MKDEV(hello_major, 0), NULL, "hello%d", 0);
 
@@ -136,9 +142,8 @@ out:
 
 static void __exit hello_exit (void)
 {
-	class_unregister(&hello_class);                               //delete class created by us
-
 	device_destroy(&hello_class, MKDEV(hello_major, 0));         //delete device node under /dev
+	class_unregister(&hello_class);                               //delete class created by us
 	unregister_chrdev_region(MKDEV(hello_major, 0), HELLO_MAX_DEVICES);
 	cdev_del(hello_cdev);
 
