@@ -118,5 +118,9 @@ export PATH=$PATH:/home/jgsun/work/env/localtests/Build_environment
 alias sx='source set-xtool.sh'
 alias tg='tagsgen.sh'
 alias repo='cd /home/jgsun/work/repo'
-alias gotr='cd /home/jgsun/work/repo/trainning'
+alias gtr='cd /home/jgsun/work/repo/trainning'
 alias vi='vim'
+
+# to fix gvim issue:
+# ** (gvim:20320): WARNING **: Unable to create Ubuntu Menu Proxy: Timeout was reached
+function gvim () { (/usr/bin/gvim -f "$@" &) }
