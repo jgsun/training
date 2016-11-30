@@ -1,0 +1,272 @@
+"""""""""""""""""""""""""""""""""
+" peter.chen
+"""""""""""""""""""""""""""""""""
+" => General Options "{{{
+" set guifont=DejaVu\ Sans\ YuanTi\ Mono\ 10
+set guifont=Monospace\ 12
+set guifontwide=Monospace\ 12
+
+" Session
+set sessionoptions-=curdir
+set sessionoptions+=sesdir
+
+" highlight current line
+set cursorline
+set nocursorcolumn
+
+" use nocompatible
+set nocompatible
+
+" indentify character coding automatically
+set fencs=utf-8,gb18030
+
+" options about serach
+set hls
+set incsearch
+"set ic smartcase
+
+" show input commands
+set showcmd
+
+" history log line
+set history=200
+
+" read file modified outside
+set autoread
+
+" mouse active always
+" set mouse=a
+
+" set mapleader
+let mapleader = ";"
+let g:mapleader = ";"
+
+" reload configure file rapidly
+map <leader>s :source ~/.vimrc<cr>
+map <leader>e :e! ~/.vimrc<cr>
+
+" reload once .vimrc is modified
+autocmd! bufwritepost vimrc source ~/.vimrc
+
+" goto the position of last openning
+autocmd BufReadPost *
+			\ if line("'\"") > 0 && line ("'\"") <= line("$") |
+			\ exe "normal! g'\"" |
+			\ endif
+
+
+"}}}
+"
+"
+"
+"
+" => Colors and Fonts "{{{
+set t_Co=256
+" let g:CSApprox_attr_map = { 'bold' : 'bold', 'italic' : '', 'sp' : '' }
+" set color scheme
+"set background=dark
+"colorscheme wombat
+colorscheme desert
+
+" syntax highlight
+syntax on
+
+" font
+"set gfn=Vera\ Sans\ YuanTi\ Mono:h10
+"set gfn=Droid\ Sans\ Fallback:h10
+
+" GUI
+if has("gui_running")
+	set guioptions-=T
+	let psc_style='cool'
+endif
+
+" collapsing options
+set foldmethod=marker
+"}}}
+" => other UI options"{{{
+" Tab indent
+"set smarttab
+"set tabstop=4
+"set expandtab
+set softtabstop=8
+set tabstop=8
+
+" autoindent
+set smartindent
+"set shiftwidth=4
+set shiftwidth=8
+set autoindent
+set cindent
+
+" show line number
+set number
+
+" set cursor position
+set ruler
+
+" wild
+set wildmenu
+
+" reserve 3 lines when moving up and down
+set so=3
+
+" set backspace
+set backspace=eol,start,indent
+
+" Backspace and cursor keys wrap to
+set whichwrap+=<,>,h,l
+
+" set magic on
+set magic
+
+" No sound on errors
+set noerrorbells
+set novisualbell
+set t_vb=
+
+" brackets match
+set showmatch
+
+" How many tenths of a second to blink
+set mat=2
+
+" status bar
+set laststatus=2
+function! CurDir()
+	let curdir = substitute(getcwd(), '/home/peter', "~/", "g")
+	return curdir
+endfunction
+set statusline=\ %f%m%r%h\ %w\ %<CWD:\ %{CurDir()}\ %=Pos:\ %l/%L:%c\ %p%%\
+
+
+" Smart way to move btw. windows
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
+
+" the size of command window
+set cmdheight=1
+"}}}
+"
+" => Files "{{{
+" file coding
+set fileencodings=ucs-bom,utf-8,gb2312,gbk,gb18030,big-5,ucs,latin1
+set termencoding=utf-8
+set encoding=utf-8
+set fileformats=unix
+set encoding=prc
+
+" start file type plugin
+filetype on
+filetype plugin on
+filetype indent on
+
+" file type
+set ffs=unix,dos
+nmap <leader>fd :se ff=dos<cr>
+nmap <leader>fu :se ff=unix<cr>
+
+" no backup
+set nobackup
+set nowritebackup
+"}}}
+"
+" => MISC"{{{
+"}}}
+" => Plugins "{{{
+" autocomplete
+set completeopt=longest,menu
+
+" for taglist
+nmap <F9> :TlistToggle <CR>
+let Tlist_Use_Right_Window=1
+let Tlist_File_Fold_Auto_Close=1
+let Tlist_Exit_OnlyWindow = 1
+"let Tlist_Auto_Open=1
+
+nmap <F8> :NERDTreeToggle <CR>
+
+" MiniBufExpl
+let g:miniBufExplMapWindowNavVim = 1
+let g:miniBufExplMapWindowNavArrows = 1
+let g:miniBufExplMapCTabSwitchBufs = 1
+let g:miniBufExplModSelTarget = 1
+
+nmap <F4> :MiniBufExplorer<cr> :UMiniBufExplorer<cr>
+
+" SuperTab
+
+
+" for AutoComplete
+"let g:AutoComplPop_NotEnableAtStartup = 1
+"nmap <F10> :AutoComplPopEnable
+"nmap <C-F10> :AutoComplPopDisable
+
+" for echofunc
+set tags+=~/.vim/systags
+"nmap <M-F9> :!ctags --append=yes -f ~/.vim/systags --fields=+lS
+"nmap <C-F9> :!ctags -R --fields=+lS
+let g:EchoFuncLangsUsed = ["c", "cpp", "java"]
+"}}}
+"
+" => DIY some sytax highlight"{{{
+"hi Mark ctermbg=Red ctermfg=Green
+"syntax region unKnown start='???' end='???'
+"hi def link unKnown Mark
+" Test line:  ??? >...< ???
+"match Mark '???'
+"}}}
+" => short key"{{{
+" Buffer
+set hidden
+nmap <leader>bn :bn<cr>
+nmap <leader>bp :bp<cr>
+nmap <leader>bb :b#<cr>
+nmap <leader>bls :buffers<cr>
+nmap <leader>b1 :b1<cr>
+nmap <leader>b2 :b2<cr>
+nmap <leader>b3 :b3<cr>
+nmap <leader>b4 :b4<cr>
+nmap <leader>b5 :b5<cr>
+nmap <leader>b6 :b6<cr>
+nmap <leader>b7 :b7<cr>
+nmap <leader>b8 :b8<cr>
+nmap <leader>b9 :b9<cr>
+
+"nmap <F3> :vimgrep <cword> **/*.cpp **/*.h<cr> :copen <cr>
+"nmap <F3> mZ :grep -Rn <cword> **/*.cpp **/*.c **/*.h **/*.java 2>/dev/null<cr><cr> :copen <cr>
+nmap <F3> mZ :grep -Rn <cword> ./ 2>/dev/null<cr><cr> :copen <cr>
+set grepformat=%f:%l:%m
+"set grepprg=
+
+"}}}
+
+set tags=tags;
+set autochdir
+"ManagerWindowLayout='FileExplorer|TagList'
+"ManagerWindowLayout='TagList'
+"nmap wm :WMToggle<cr>
+
+"NERD Tree
+let NERDChristmasTree=1
+let NERDTreeAutoCenter=1
+let NERDTreeBookmarksFile=$VIM.'\Data\NerdBookmarks.txt'
+let NERDTreeMouseMode=2
+let NERDTreeShowBookmarks=1
+let NERDTreeShowFiles=1
+let NERDTreeShowHidden=1
+let NERDTreeShowLineNumbers=1
+let NERDTreeWinPos='left'
+let NERDTreeWinSize=31
+"nnoremap f :NERDTreeToggle<CR>
+"let g:CSApprox_verbose_level = 0
+let NERDTreeBookmarksFile=$VIM.'\Data\NerdBookmarks.txt'
+let NERDTreeMouseMode=2
+let NERDTreeShowBookmarks=1
+"--enable-gui=gnome2
+"show space in end of line
+highlight WhitespaceEOL ctermbg=red guibg=red
+match WhitespaceEOL /\s\+$/
+
