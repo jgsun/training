@@ -14,7 +14,7 @@
  *
  */
 
-#include <linux/config.h>
+//#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -29,7 +29,7 @@
 #include <linux/seq_file.h>
 #include <linux/cdev.h>
 
-#include <asm/system.h>		/* cli(), *_flags */
+//#include <asm/system.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
 
 #include "scull.h"		/* local definitions */
@@ -390,7 +390,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
  * The ioctl() implementation
  */
 
-int scull_ioctl(struct inode *inode, struct file *filp,
+long scull_ioctl(struct inode *inode, struct file *filp,
                  unsigned int cmd, unsigned long arg)
 {
 
@@ -498,14 +498,14 @@ int scull_ioctl(struct inode *inode, struct file *filp,
          * The scullpipe device uses this same ioctl method, just to
          * write less code. Actually, it's the same driver, isn't it?
          */
-
+#if 0
 	  case SCULL_P_IOCTSIZE:
 		scull_p_buffer = arg;
 		break;
 
 	  case SCULL_P_IOCQSIZE:
 		return scull_p_buffer;
-
+#endif
 
 	  default:  /* redundant, as cmd was checked against MAXNR */
 		return -ENOTTY;
@@ -553,7 +553,7 @@ struct file_operations scull_fops = {
 	.llseek =   scull_llseek,
 	.read =     scull_read,
 	.write =    scull_write,
-	.ioctl =    scull_ioctl,
+	.unlocked_ioctl =    scull_ioctl,
 	.open =     scull_open,
 	.release =  scull_release,
 };
@@ -589,8 +589,8 @@ void scull_cleanup_module(void)
 	unregister_chrdev_region(devno, scull_nr_devs);
 
 	/* and call the cleanup functions for friend devices */
-	scull_p_cleanup();
-	scull_access_cleanup();
+	//scull_p_cleanup();
+	//scull_access_cleanup();
 
 }
 
@@ -649,14 +649,14 @@ int scull_init_module(void)
 	for (i = 0; i < scull_nr_devs; i++) {
 		scull_devices[i].quantum = scull_quantum;
 		scull_devices[i].qset = scull_qset;
-		init_MUTEX(&scull_devices[i].sem);
+		sema_init(&scull_devices[i].sem, 0);
 		scull_setup_cdev(&scull_devices[i], i);
 	}
 
         /* At this point call the init function for any friend device */
-	dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
-	dev += scull_p_init(dev);
-	dev += scull_access_init(dev);
+	//dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
+	//dev += scull_p_init(dev);
+	//dev += scull_access_init(dev);
 
 #ifdef SCULL_DEBUG /* only when debugging */
 	scull_create_proc();
