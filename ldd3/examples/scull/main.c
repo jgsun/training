@@ -238,10 +238,10 @@ static void scull_remove_proc(void)
 int scull_open(struct inode *inode, struct file *filp)
 {
 	struct scull_dev *dev; /* device information */
-	printk("%s(%d)\r\n", __func__, __LINE__);
 
 	dev = container_of(inode->i_cdev, struct scull_dev, cdev);
 	filp->private_data = dev; /* for other methods */
+	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 
 	/* now trim to 0 the length of the device if open was write-only */
 	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) {
@@ -250,7 +250,6 @@ int scull_open(struct inode *inode, struct file *filp)
 		scull_trim(dev); /* ignore errors */
 		up(&dev->sem);
 	}
-	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 	return 0;          /* success */
 }
 
@@ -294,7 +293,6 @@ struct scull_qset *scull_follow(struct scull_dev *dev, int n)
 ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
                 loff_t *f_pos)
 {
-	printk("%s(%d)\r\n", __func__, __LINE__);
 	struct scull_dev *dev = filp->private_data;
 	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 	struct scull_qset *dptr;	/* the first listitem */
@@ -657,7 +655,7 @@ int scull_init_module(void)
 		printk("%s(%d):%p\r\n", __func__, __LINE__, &scull_devices[i]);
 		scull_devices[i].quantum = scull_quantum;
 		scull_devices[i].qset = scull_qset;
-		sema_init(&scull_devices[i].sem, 0);
+		sema_init(&scull_devices[i].sem, 1);
 		scull_setup_cdev(&scull_devices[i], i);
 	}
 
