@@ -238,6 +238,7 @@ static void scull_remove_proc(void)
 int scull_open(struct inode *inode, struct file *filp)
 {
 	struct scull_dev *dev; /* device information */
+	printk("%s(%d)\r\n", __func__, __LINE__);
 
 	dev = container_of(inode->i_cdev, struct scull_dev, cdev);
 	filp->private_data = dev; /* for other methods */
@@ -249,6 +250,7 @@ int scull_open(struct inode *inode, struct file *filp)
 		scull_trim(dev); /* ignore errors */
 		up(&dev->sem);
 	}
+	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 	return 0;          /* success */
 }
 
@@ -292,7 +294,9 @@ struct scull_qset *scull_follow(struct scull_dev *dev, int n)
 ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
                 loff_t *f_pos)
 {
-	struct scull_dev *dev = filp->private_data; 
+	printk("%s(%d)\r\n", __func__, __LINE__);
+	struct scull_dev *dev = filp->private_data;
+	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 	struct scull_qset *dptr;	/* the first listitem */
 	int quantum = dev->quantum, qset = dev->qset;
 	int itemsize = quantum * qset; /* how many bytes in the listitem */
@@ -339,6 +343,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
 	struct scull_dev *dev = filp->private_data;
 	struct scull_qset *dptr;
 	int quantum = dev->quantum, qset = dev->qset;
+	printk("%s(%d):%p\r\n", __func__, __LINE__, dev);
 	int itemsize = quantum * qset;
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = -ENOMEM; /* value used in "goto out" statements */
@@ -601,7 +606,7 @@ void scull_cleanup_module(void)
 static void scull_setup_cdev(struct scull_dev *dev, int index)
 {
 	int err, devno = MKDEV(scull_major, scull_minor + index);
-    
+
 	cdev_init(&dev->cdev, &scull_fops);
 	dev->cdev.owner = THIS_MODULE;
 	dev->cdev.ops = &scull_fops;
@@ -617,6 +622,7 @@ int scull_init_module(void)
 	int result, i;
 	dev_t dev = 0;
 
+	printk("%s(%d)\r\n", __func__, __LINE__);
 /*
  * Get a range of minor numbers to work with, asking for a dynamic
  * major unless directed otherwise at load time.
@@ -647,6 +653,8 @@ int scull_init_module(void)
 
         /* Initialize each device. */
 	for (i = 0; i < scull_nr_devs; i++) {
+
+		printk("%s(%d):%p\r\n", __func__, __LINE__, &scull_devices[i]);
 		scull_devices[i].quantum = scull_quantum;
 		scull_devices[i].qset = scull_qset;
 		sema_init(&scull_devices[i].sem, 0);
