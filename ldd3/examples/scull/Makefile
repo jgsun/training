@@ -1,6 +1,7 @@
 # Comment/uncomment the following line to disable/enable debugging
 #DEBUG = y
 
+CONFIG_MODULE_SIG=n
 
 # Add your debugging flag (or not) to EXTRA_CFLAGS
 ifeq ($(DEBUG),y)
