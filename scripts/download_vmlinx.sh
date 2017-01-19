@@ -14,3 +14,8 @@ sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C8CAB6595FDFF622
 
 sudo apt-get update
 sudo apt-get install linux-image-$(uname -r)-dbgsym
+
+sudo rm /etc/apt/sources.list.d/ddebs.list
+
+# restore the sources list
+sudo apt-get update
