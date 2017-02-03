@@ -15,20 +15,14 @@
  * $Id: faulty.c,v 1.3 2004/09/26 07:02:43 gregkh Exp $
  */
 
-
-#include <linux/config.h>
+// #include <linux/config.h>
 #include <linux/module.h>
 #include <linux/init.h>
-
+#include <linux/miscdevice.h>
 #include <linux/kernel.h> /* printk() */
 #include <linux/fs.h>     /* everything... */
 #include <linux/types.h>  /* size_t */
 #include <asm/uaccess.h>
-
-MODULE_LICENSE("Dual BSD/GPL");
-
-
-int faulty_major = 0;
 
 ssize_t faulty_read(struct file *filp, char __user *buf,
 		    size_t count, loff_t *pos)
@@ -54,36 +48,37 @@ ssize_t faulty_write (struct file *filp, const char __user *buf, size_t count,
 	return 0;
 }
 
-
-
 struct file_operations faulty_fops = {
 	.read =  faulty_read,
 	.write = faulty_write,
 	.owner = THIS_MODULE
 };
 
+static struct miscdevice faulty_miscdev = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "faulty",
+	.fops = &faulty_fops,
+};
 
 int faulty_init(void)
 {
-	int result;
+	int ret;
 
-	/*
-	 * Register your major, and accept a dynamic number
-	 */
-	result = register_chrdev(faulty_major, "faulty", &faulty_fops);
-	if (result < 0)
-		return result;
-	if (faulty_major == 0)
-		faulty_major = result; /* dynamic */
-
+	ret = misc_register(&faulty_miscdev);
+	if (ret < 0) {
+		printk("faulty: failed to register misc device\n");
+		return ret;
+	}
 	return 0;
 }
 
 void faulty_cleanup(void)
 {
-	unregister_chrdev(faulty_major, "faulty");
+	misc_deregister(&faulty_miscdev);
 }
 
 module_init(faulty_init);
 module_exit(faulty_cleanup);
-
+MODULE_AUTHOR("Jonathan Corbet and jianguo_sun@hotmail.com");
+MODULE_DESCRIPTION("faulty driver");
+MODULE_LICENSE("GPL");

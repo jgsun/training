@@ -4,6 +4,10 @@
 # Makefile once again.
 # This conditional selects whether we are being included from the
 # kernel Makefile or not.
+
+# fix the error:module verification failed
+CONFIG_MODULE_SIG=n
+
 ifeq ($(KERNELRELEASE),)
 
     # Assume the source tree is where the running kernel was built
@@ -25,8 +29,10 @@ clean:
 
 else
     # called from kernel build system: just declare what our modules are
-    obj-m := hello.o hellop.o seq.o jit.o jiq.o sleepy.o complete.o \
-             silly.o faulty.o kdatasize.o kdataalign.o
+    # obj-m := hello.o hellop.o seq.o jit.o jiq.o sleepy.o complete.o \
+    #         silly.o faulty.o kdatasize.o kdataalign.o
+    obj-m := hello.o hellop.o sleepy.o complete.o \
+             faulty.o
 endif
 
 
