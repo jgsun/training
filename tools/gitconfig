@@ -1,9 +1,10 @@
 [user]
 	name = jgsun
 	email = jianguo_sun@hotmail.com
-[color]
-	status = auto
-	branch=auto
-	interactive=auto
-	diff=auto
-	log=auto
+[alias]
+	st = status -s --porcelain
+	co = checkout
+	ci = commit
+	br = branch
+	bra = branch -a
+	unstage = reset HEAD
