@@ -28,6 +28,7 @@
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/seq_file.h>
 #include <linux/cdev.h>
+#include <linux/device.h>
 
 //#include <asm/system.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
@@ -55,6 +56,10 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 struct scull_dev *scull_devices;	/* allocated in scull_init_module */
 
+/* scull class infrastructure */
+static struct class scull_class = {
+		.name = "scull",
+};
 
 /*
  * Empty out the scull device; must be called with the device
@@ -649,14 +654,27 @@ int scull_init_module(void)
 	}
 	memset(scull_devices, 0, scull_nr_devs * sizeof(struct scull_dev));
 
+	result = class_register(&scull_class);
+	if (result) {
+		printk(KERN_ERR "class_register failed for scull\n");
+		goto fail;
+	}
+
         /* Initialize each device. */
 	for (i = 0; i < scull_nr_devs; i++) {
-
 		printk("%s(%d):%p\r\n", __func__, __LINE__, &scull_devices[i]);
 		scull_devices[i].quantum = scull_quantum;
 		scull_devices[i].qset = scull_qset;
 		sema_init(&scull_devices[i].sem, 1);
 		scull_setup_cdev(&scull_devices[i], i);
+		scull_devices[i].dev = device_create(&scull_class, NULL,
+				MKDEV(scull_major, i), &scull_devices[i],
+				"scull%d", i);
+		if (IS_ERR(scull_devices[i].dev)) {
+			printk(KERN_ERR "scull: device register failed\n");
+			result = PTR_ERR(scull_devices[i].dev);
+			goto fail;
+		}
 	}
 
         /* At this point call the init function for any friend device */

@@ -92,6 +92,7 @@ struct scull_dev {
 	unsigned int access_key;  /* used by sculluid and scullpriv */
 	struct semaphore sem;     /* mutual exclusion semaphore     */
 	struct cdev cdev;	  /* Char device structure		*/
+	struct device *dev;
 };
 
 /*
