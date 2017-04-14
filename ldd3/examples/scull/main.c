@@ -643,7 +643,7 @@ int scull_init_module(void)
 		return result;
 	}
 
-        /* 
+        /*
 	 * allocate the devices -- we can't have them static, as the number
 	 * can be specified at load time
 	 */
@@ -678,8 +678,8 @@ int scull_init_module(void)
 	}
 
         /* At this point call the init function for any friend device */
-	//dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
-	//dev += scull_p_init(dev);
+	dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
+	dev += scull_p_init(dev);
 	//dev += scull_access_init(dev);
 
 #ifdef SCULL_DEBUG /* only when debugging */

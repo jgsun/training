@@ -28,6 +28,7 @@
 #include <linux/tty.h>
 #include <asm/atomic.h>
 #include <linux/list.h>
+#include <linux/sched.h>
 
 #include "scull.h"        /* local definitions */
 
@@ -80,7 +81,7 @@ struct file_operations scull_sngl_fops = {
 	.llseek =     	scull_llseek,
 	.read =       	scull_read,
 	.write =      	scull_write,
-	.ioctl =      	scull_ioctl,
+	.unlocked_ioctl =      	scull_ioctl,
 	.open =       	scull_s_open,
 	.release =    	scull_s_release,
 };
@@ -142,7 +143,7 @@ struct file_operations scull_user_fops = {
 	.llseek =     scull_llseek,
 	.read =       scull_read,
 	.write =      scull_write,
-	.ioctl =      scull_ioctl,
+	.unlocked_ioctl =      scull_ioctl,
 	.open =       scull_u_open,
 	.release =    scull_u_release,
 };
@@ -215,7 +216,7 @@ struct file_operations scull_wusr_fops = {
 	.llseek =     scull_llseek,
 	.read =       scull_read,
 	.write =      scull_write,
-	.ioctl =      scull_ioctl,
+	.unlocked_ioctl =      scull_ioctl,
 	.open =       scull_w_open,
 	.release =    scull_w_release,
 };
@@ -261,7 +262,7 @@ static struct scull_dev *scull_c_lookfor_device(dev_t key)
 	memset(lptr, 0, sizeof(struct scull_listitem));
 	lptr->key = key;
 	scull_trim(&(lptr->device)); /* initialize it */
-	init_MUTEX(&(lptr->device.sem));
+	sema_init(&lptr->devices.sem, 1);
 
 	/* place it in the list */
 	list_add(&lptr->list, &scull_c_list);
@@ -314,7 +315,7 @@ struct file_operations scull_priv_fops = {
 	.llseek =   scull_llseek,
 	.read =     scull_read,
 	.write =    scull_write,
-	.ioctl =    scull_ioctl,
+	.unlocked_ioctl =    scull_ioctl,
 	.open =     scull_c_open,
 	.release =  scull_c_release,
 };
@@ -347,6 +348,7 @@ static void scull_access_setup (dev_t devno, struct scull_adev_info *devinfo)
 	/* Initialize the device structure */
 	dev->quantum = scull_quantum;
 	dev->qset = scull_qset;
+	sema_init(&devsem, 1);
 	init_MUTEX(&dev->sem);
 
 	/* Do the cdev stuff. */
