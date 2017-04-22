@@ -1,0 +1,1 @@
+cmd_/home/jgsun/work/repo/trainning/ldd3/examples/scull/scull.o := ld -m elf_x86_64   -r -o /home/jgsun/work/repo/trainning/ldd3/examples/scull/scull.o /home/jgsun/work/repo/trainning/ldd3/examples/scull/main.o /home/jgsun/work/repo/trainning/ldd3/examples/scull/pipe.o /home/jgsun/work/repo/trainning/ldd3/examples/scull/access.o 
