@@ -129,11 +129,13 @@ done:
 static void demo_map_exit(void)
 {
     del_timer_sync(&timer);
+    class_unregister(&mmap_demo_class);
     cdev_del(mmap_demo_dev.pcdev);
     unregister_chrdev_region(ndev, 1);
     kunmap(pg);
     ClearPageReserved(pg);
     __free_pages(pg, 0);
+    printk("mmap_demo exit\r\n");
 }
 
 module_init(demo_map_init);
